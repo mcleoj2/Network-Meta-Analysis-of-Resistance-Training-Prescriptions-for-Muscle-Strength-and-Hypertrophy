@@ -4,9 +4,7 @@
 rm(list=ls())
 
 library (multinma)
-library(dplyr)
-library(ggplot2)
-library(tidyr)
+library(tidyverse)
 
 options(mc.cores= parallel::detectCores())
 
@@ -14,9 +12,7 @@ options(mc.cores= parallel::detectCores())
 #Read in Contrast-Based Data
 Data <- read.csv('TBR_Hypertrophy_ArmLevelContrastData_MultipleImputationDataSet_MultiNMA_Oct2022.csv',
                  header=TRUE)
-View(Data)
-str(Data)
-head(Data)
+
 
 #If running and excluding outlier studies and weak nodes, then run the code below
 #Data3 <- Data[!(Data$treatment=="HM1" | Data$study =="Rodriguez-Lopez 2022" & Data$treatment== "HM2" | 
@@ -24,31 +20,32 @@ head(Data)
   #                Data$study =="Stefanaki 2019" | Data$study =="Sooneste 2013"),]
 
 #Your data should be in contrast-based format. Make sure you've accounted for multi-arm trials
-Net <- set_agd_contrast(data = Data #change this depending on if you have changed the list of studies to include
-                        ,study = study,
-                                        trt = treatment,
-                                        y = diff, 
-                                        se = std.err,
-                                        sample_size = sample.size)
-#Summarize the network and plot the NMA
-Net
-plot(Net)
+Net <- 
+set_agd_contrast(
+  data = Data, #change this depending on if you have changed the list of studies to include
+  study = study,
+  trt = treatment,
+  y = diff, 
+  se = std.err,
+  sample_size = sample.size
+  )
 
 #Random Effects NMA with Duration as a continuous covariate
-NMA_Regression <- nma(Net,trt_effects = "random", regression = ~(Age_Mean):.trt,
-prior_intercept = normal(0, 100),
-prior_trt = normal(scale = 100),
-prior_het = half_normal (scale = 5),
-prior_reg = normal(scale = 100),
-warmup = 4000,
-iter = 10000,
-thin = 10)
-
-NMA_Regression 
+NMA_Regression <- 
+nma(
+  Net,
+  trt_effects = "random", regression = ~(Age_Mean):.trt,
+  prior_intercept = normal(0, 100),
+  prior_trt = normal(scale = 100),
+  prior_het = half_normal (scale = 5),
+  prior_reg = normal(scale = 100),
+  warmup = 4000,
+  iter = 10000,
+  thin = 10
+  )
 
 #View the residual deviance, and DIC. 
 NMA_Regression_dic <- dic(NMA_Regression)
-NMA_Regression_dic
 
 #View Heterogeneity
 summary(NMA_Regression, pars = "tau")

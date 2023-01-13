@@ -7,9 +7,7 @@
 rm(list=ls(all=T))
 #If you dont have the following packages below, run install.packages("package name")
 library(meta)
-library(dplyr)
 library(tidyverse)
-library(dmetar)
 library(gridExtra)
 
 #Read in and view your data, With calculated effect sizes

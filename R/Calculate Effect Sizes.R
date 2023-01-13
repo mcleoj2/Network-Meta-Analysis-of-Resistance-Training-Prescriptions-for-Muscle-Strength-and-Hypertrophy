@@ -1,13 +1,12 @@
 #Calculate SMD, SE, and Hedges G -----
-#Clear environment, Install and/or load packages
-rm(list=ls(all=T))
+
 #If you dont have the following packages below, run install.packages("package name")
-library(dplyr)
+library(tidyverse)
 library(esc)
+
 #Load in contrast-based data sheet
 #Read in and view contrast-level data ----
-Data <- read.csv('TBR_Hypertrophy_Pairwise_Comparison.csv'
-                 ,header=TRUE)
+Data <- read_csv('TBR_Hypertrophy_Pairwise_Comparison.csv')
 
 #Calculate SMD (specifically Hedges G), and SE
 EffectSizes <- esc_mean_sd(grp1m = Data$Change_Mean1, grp2m = Data$Change_Mean2, 

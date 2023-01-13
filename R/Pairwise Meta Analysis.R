@@ -2,19 +2,18 @@
 #Author: J.Mcleod 
 
 #NOTE: this code will not assess outliers and influential cases, see, "Outliers and Influential Cases Script."
-rm(list=ls(all=T))
 #If you dont have the following packages below, run install.packages("package name")
-library(meta)
-library(dplyr)
-library(tidyverse)
-library(dmetar)
-library(gridExtra)
+if (!require("meta", quietly = TRUE))
+    install.packages("meta")
+if (!require("tidyverse", quietly = TRUE))
+    install.packages("tidyverse")
+if (!require("dmetar", quietly = TRUE))
+    install.packages("dmetar")
+if (!require("gridExtra", quietly = TRUE))
+    install.packages("gridExtra")
 
 #Read in and view your data, With calculated effect sizes
-Data <- read.csv ("TBR_Hypertrophy_Pairwise_EffectSizes_Oct2022.csv", sep=',',
-                  header=TRUE)
-View(Data)
-str(Data)
+Data <- read_csv ("TBR_Hypertrophy_Pairwise_EffectSizes_Oct2022.csv")
 ##### FOR EACH COMPARISON, COPY AND PASTE THE FOLLOWING CODE BELOW#
 #### ADJUST THE OBJECT NAMES ACCORDING TO EACH COMPARISON##
 
@@ -23,24 +22,22 @@ str(Data)
 #Filter Data
 Data2 <- filter(Data, Treatment_Comparison == 31)
 
-#View Data
-View(Data2)
-
 #Create Pairwise Meta Analysis
-Meta <- metagen(TE = es,
-                        seTE = se,
-                        studlab = Study,
-                        data = Data2,
-                        sm = "SMD",
-                        method.SMD = "Hedges",
-                        fixed = FALSE,
-                        random = TRUE,
-                        prediction = TRUE,
-                        method.tau = "REML",
-                        hakn = TRUE,
-                        title = "Pairwise Random-Effects Meta Analysis: Hypertrophy: LS2 VS CTRL")
-#Assess heterogeneity
-summary(Meta)
+Meta <- 
+       metagen(
+              TE = es,
+              seTE = se,
+              studlab = Study,
+              data = Data2,
+              sm = "SMD",
+              method.SMD = "Hedges",
+              fixed = FALSE,
+              random = TRUE,
+              prediction = TRUE,
+              method.tau = "REML",
+              hakn = TRUE,
+              title = "Pairwise Random-Effects Meta Analysis: Hypertrophy: LS2 VS CTRL"
+              )
 
 #Cochrans Q:
 #Interpretation: Significance suggests the presence of between-study heterogeneity
@@ -57,16 +54,20 @@ summary(Meta)
 #Prediction Interval (PI): Give us the range into which we can "predict" the effects of future studies to fall based on current evidence
 
 #Generate Forest Plot 
-Forest <- forest.meta(Meta, 
-                              sortvar = TE,
-                              leftcols = c("studlab"),
-                              leftlabs = c("Study"),
-                              xlim = c(-1,3.5),
-                              test.overall.random = TRUE,
-                              label.left = "Favors CTRL",
-                              label.right = "Favors LS2",
-                              colgap.forest = "3.5cm")
+Forest <- 
+       forest.meta(
+              Meta, 
+              sortvar = TE,
+              leftcols = c("studlab"),
+              leftlabs = c("Study"),
+              xlim = c(-1,3.5),
+              test.overall.random = TRUE,
+              label.left = "Favors CTRL",
+              label.right = "Favors LS2",
+              colgap.forest = "3.5cm"
+              )
 #Save Image
+save.image(Forest, "outputs/Forest.png")
 
 #Publication Bias
 #Visual inspection of publication bias -  Contoured Enhanced Funnel Plot
@@ -74,12 +75,15 @@ Forest <- forest.meta(Meta,
 #Create Colour Schema
 col.contour = c("grey51", "grey80", "grey95")
 #Generate Funnel Plot
-Funnel <- funnel.meta(x = Meta,
-                              contour= c(0.9,0.95,0.99),
-                              col.contour = col.contour,
-                              random= TRUE,
-                              studlab = TRUE,
-                              xlim = c(-1,3.5))
+Funnel <- 
+       funnel.meta(
+              x = Meta,
+              contour= c(0.9,0.95,0.99),
+              col.contour = col.contour,
+              random= TRUE,
+              studlab = TRUE,
+              xlim = c(-1,3.5)
+              )
 #Generate Title and Add Legend
 title("Funnel Plot (LS2 VS CTRL)")
 legend(x = 0.75, y = 0.01, 
@@ -111,20 +115,21 @@ Data2 <- filter(Data, Treatment_Comparison == 41)
 View(Data2)
 
 #Create Pairwise Meta Analysis
-Meta <- metagen(TE = es,
-                seTE = se,
-                studlab = Study,
-                data = Data2,
-                sm = "SMD",
-                method.SMD = "Hedges",
-                fixed = FALSE,
-                random = TRUE,
-                prediction = TRUE,
-                method.tau = "REML",
-                hakn = TRUE,
-                title = "Pairwise Random-Effects Meta Analysis: Hypertrophy: LS3 VS CTRL")
-#Assess heterogeneity
-summary(Meta)
+Meta <- metagen(
+       TE = es,
+       seTE = se,
+       studlab = Study,
+       data = Data2,
+       sm = "SMD",
+       method.SMD = "Hedges",
+       fixed = FALSE,
+       random = TRUE,
+       prediction = TRUE,
+       method.tau = "REML",
+       hakn = TRUE,
+       title = "Pairwise Random-Effects Meta Analysis: Hypertrophy: LS3 VS CTRL"
+       )
+
 
 #Cochrans Q:
 #Interpretation: Significance suggests the presence of between-study heterogeneity
@@ -141,16 +146,20 @@ summary(Meta)
 #Prediction Interval (PI): Give us the range into which we can "predict" the effects of future studies to fall based on current evidence
 
 #Generate Forest Plot 
-Forest <- forest.meta(Meta, 
-                      sortvar = TE,
-                      leftcols = c("studlab"),
-                      leftlabs = c("Study"),
-                      xlim = c(-1,1.8),
-                      test.overall.random = TRUE,
-                      label.left = "Favors CTRL",
-                      label.right = "Favors LS3",
-                      colgap.forest = "3.5cm")
+Forest2 <- 
+       forest.meta(
+              Meta, 
+              sortvar = TE,
+              leftcols = c("studlab"),
+              leftlabs = c("Study"),
+              xlim = c(-1,1.8),
+              test.overall.random = TRUE,
+              label.left = "Favors CTRL",
+              label.right = "Favors LS3",
+              colgap.forest = "3.5cm"
+              )
 #Save Image
+save.image(Forest2, "outputs/Forest2.png")
 
 #Publication Bias
 #Visual inspection of publication bias -  Contoured Enhanced Funnel Plot

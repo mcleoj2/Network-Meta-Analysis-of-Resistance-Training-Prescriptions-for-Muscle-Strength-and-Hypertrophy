@@ -1,0 +1,22 @@
+---
+title: "Top-level Notebook"
+format: html
+---
+
+This is a place where you can place all of your `View()`, `str()`, `summary()`, and plotting functions. The idea is to simply have this as the top level 'meta-script' that will run all of the scripts you've developed one-by-one. 
+
+The notebook format is as a nice place to render all the images in in one place. It may also take place of the `save.image()`, unless you want to export them for another purpose, like final publication.
+
+Keep in mind that if there are any dependencies (i.e. scripts that depend on other scripts) that will affect the order they should be run in. I've given it my best guess here, but please fix as necessary.
+
+```{r}
+source("R/PrepDataForNMA.R")
+```
+
+```{r}
+
+#Visualize Network Geometry
+plot(TBR_Hypertrophy_Net, weight_edges = TRUE, weight_nodes = TRUE) + 
+  ggplot2::theme (legend.position = "bottom", legend.box = "vertical")
+
+```
