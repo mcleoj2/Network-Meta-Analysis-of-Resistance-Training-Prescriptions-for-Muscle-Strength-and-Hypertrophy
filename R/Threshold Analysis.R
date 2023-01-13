@@ -1,13 +1,11 @@
-#This code will run threshold analysis following an NMA to determine the robustness of your treatment rankings
+# This code will run threshold analysis following an NMA to determine the robustness of your treatment rankings
 
-#Author: J.Mcleod
-rm(list=ls())
+# Author: J.Mcleod
+
 library(nmathresh)
 library(Matrix)
 library(multinma)
-library(dplyr)
-library(ggplot2)
-library(tidyr)
+library(tidyverse)
 
 # order of events to conduct study level threshold analysis
 
@@ -25,50 +23,43 @@ options(mc.cores= parallel::detectCores())
 #Read in Contrast-Based Data
 Data <- read.csv('TBR_Hypertrophy_ArmLevelContrastData_MultipleImputationDataSet_MultiNMA_Oct2022.csv',
                  header=TRUE)
-#View the data
-View(Data)
-str(Data)
-head(Data)
 
 #Your data should be in contrast-based format. Make sure you've accounted for multi-arm trials
-TBR_Hypertrophy_Net <- set_agd_contrast(data = Data,
-                                        study = study,
-                                        trt = treatment,
-                                        y = diff, 
-                                        se = std.err,
-                                        trt_ref = "CTRL",
-                                        sample_size = sample.size)
-
-
-#Summarize the network and plot the NMA
-TBR_Hypertrophy_Net
-
-#Visualize Network Geometry
-plot(TBR_Hypertrophy_Net, weight_edges = TRUE, weight_nodes = TRUE) + 
-  ggplot2::theme (legend.position = "bottom", legend.box = "vertical")
+TBR_Hypertrophy_Net <- 
+  set_agd_contrast(
+      data = Data,
+      study = study,
+      trt = treatment,
+      y = diff, 
+      se = std.err,
+      trt_ref = "CTRL",
+      sample_size = sample.size
+      )
 
 #Random Effect NMA
-TBR_Hypertrophy_NMA_RE_unadj <- nma(TBR_Hypertrophy_Net,
-                                    trt_effects = "random",
-                                    chains = 4,
-                                    prior_trt = normal(scale = 100),
-                                    prior_het = half_normal (scale = 5),
-                                    warmup = 4000, iter = 10000,
-                                    thin = 10)
-TBR_Hypertrophy_NMA_RE_unadj
+TBR_Hypertrophy_NMA_RE_unadj <- 
+  nma(
+    TBR_Hypertrophy_Net,
+    trt_effects = "random",
+    chains = 4,
+    prior_trt = normal(scale = 100),
+    prior_het = half_normal (scale = 5),
+    warmup = 4000, iter = 10000,
+    thin = 10)
 
-#extract summary statistics
-#only need basic parameters, in other words, extract mean estimates vs CTRL
-#Relative effects compared with control 
-relative_effects(TBR_Hypertrophy_NMA_RE_unadj, trt_ref = "CTRL",
-                                             probs = c(0.025,0.975)) %>%
-  as.data.frame() -> relative_effects
+#'extract summary statistics
+#' only need basic parameters, in other words, extract mean estimates vs CTRL
+#' Relative effects compared with control 
+relative_effects <- 
+  relative_effects(
+  TBR_Hypertrophy_NMA_RE_unadj, trt_ref = "CTRL",
+    probs = c(0.025,0.975)) %>%
+    as.data.frame()
 
-#extract d and delta sampling to construct posterior covariance
+# extract d and delta sampling to construct posterior covariance
 post <- as.data.frame(TBR_Hypertrophy_NMA_RE_unadj)
 
-
-#get indices of parameters
+# get indices of parameters
 vnames <- sub("(.*)\\[.*","\\1", colnames(post))
 ind.d <- which(vnames == "d")
 ind.delta <- which(vnames=="delta")
@@ -77,18 +68,19 @@ ind.delta <- which(vnames=="delta")
 post.cov <- cov(as.matrix(post[,c(ind.d, ind.delta)]))
 
 # Read study data
-dat.raww <- read.csv('NMAThresh.csv',
-                             header=TRUE)
+dat.raww <- 
+  read.csv('NMAThresh.csv',
+  header=TRUE)
 
-# Print first few rows
-head(dat.raww)
 
 n <- nrow(dat.raww) #Number of rows
 
 # Turn wide study data into long with one row for each arm
-dat.rawl <- reshape(dat.raww, varying=c("t.2","y.2","Var.2","t.3","y.3","Var.3",
-                                        "t.4","y.4","Var.4","t.5","y.5","Var.5"),
-                    timevar="arm", idvar="studyID", direction="long")
+dat.rawl <- 
+  reshape(
+    dat.raww, 
+    varying=c("t.2","y.2","Var.2","t.3","y.3","Var.3", "t.4","y.4","Var.4","t.5","y.5","Var.5"),
+    timevar="arm", idvar="studyID", direction="long")
 
 # Sort data by study and contrast, removing NA rows
 dat.rawl <- dat.rawl[order(dat.rawl$studyID, dat.rawl$arm, dat.rawl$y, na.last=NA),]
@@ -116,12 +108,15 @@ lik.cov <- bdiag(V.diag)
 trt.code <- c("CTRL","HM1", "HM2","HM3", "HS2", "HS3",  "LM1" ,"LM2" ,"LM3","LS2", "LS3")
 
 #Conduct Thresholding
-thresh <- nma_thresh(mean.dk = relative_effects[, "mean"], 
-                     lhood = lik.cov, 
-                     post = post.cov,
-                     nmatype = "random",
-                     trt.code = trt.code,
-                     opt.max = TRUE)
+thresh <- 
+nma_thresh(
+  mean.dk = relative_effects[, "mean"], 
+  lhood = lik.cov, 
+  post = post.cov,
+  nmatype = "random",
+  trt.code = trt.code,
+  opt.max = TRUE
+  )
 
 #Construct forest plot
 # 95% CIs
